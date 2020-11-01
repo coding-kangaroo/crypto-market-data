@@ -8,11 +8,11 @@ import (
   "encoding/json"
 )
 
-func main() {
+func getMessages(addr string, params map[string]interface{}, channel chan []byte) {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
-	c, _, err := websocket.DefaultDialer.Dial("wss://pubwss.bithumb.com/pub/ws", nil)
+	c, _, err := websocket.DefaultDialer.Dial(addr, nil)
 	if err != nil {
 		log.Fatal("dial:", err)
 	}
@@ -20,8 +20,7 @@ func main() {
 
 	done := make(chan struct{})
 
-	m := map[string]interface{}{"type":"orderbookdepth", "symbols":[]string{"BTC_KRW" , "ETH_KRW"}}
-  b, _ := json.Marshal(m)
+  b, _ := json.Marshal(params)
 
 	c.WriteMessage(websocket.TextMessage, []byte(b))
 
@@ -33,7 +32,8 @@ func main() {
 				log.Println("read:", err)
 				return
 			}
-			log.Printf("recv: %s", message)
+			//log.Printf("recv: %s", message)
+      channel <- message
 		}
 	}()
 
